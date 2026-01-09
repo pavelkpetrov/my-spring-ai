@@ -23,29 +23,6 @@ import static org.mockito.MockitoAnnotations.openMocks;
 
 /**
  * Unit tests for OpenAITextGeneratorService.
- * 
- * This test class demonstrates proper service layer testing with mocked dependencies.
- * It focuses on testing business logic, error handling, and integration with the
- * Spring AI ChatClient while avoiding actual API calls.
- * 
- * Testing Strategy:
- * - Mock ChatClient to avoid real API calls (cost and speed)
- * - Test business logic and error handling thoroughly
- * - Verify proper exception translation
- * - Cover edge cases and validation scenarios
- * 
- * Educational Value:
- * - Shows how to test AI service integrations without API costs
- * - Demonstrates proper mocking of complex objects
- * - Illustrates exception testing patterns
- * - Teaches validation testing at service level
- * - Shows how to verify method calls and arguments
- * 
- * TODO for students: Complete the test implementations
- * 
- * @author Student Name
- * @version 1.0
- * @see com.my.spring.ai.bot.service.impl.OllamaAITextGeneratorService
  */
 @ExtendWith(MockitoExtension.class)
 class OllamaAITextGeneratorServiceTest {

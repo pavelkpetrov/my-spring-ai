@@ -2,39 +2,6 @@ package com.my.spring.ai.bot.exception;
 
 /**
  * Custom exception for text generation failures.
- * 
- * This exception is thrown when text generation operations fail for various reasons
- * such as API communication errors, invalid requests, or service unavailability.
- * It provides a clean abstraction over underlying technical exceptions.
- * 
- * Exception Design Principles:
- * - Meaningful Names: The exception name clearly indicates what went wrong
- * - Proper Inheritance: Extends RuntimeException for unchecked exception behavior
- * - Message Clarity: Provides user-friendly error messages
- * - Cause Preservation: Maintains the original exception for debugging
- * 
- * When to Use This Exception:
- * - OpenAI API authentication failures
- * - Network connectivity issues
- * - Invalid API responses
- * - Rate limiting exceeded
- * - Service configuration errors
- * - Prompt processing failures
- * 
- * Exception Handling Strategy:
- * This is a RuntimeException, so it doesn't need to be declared in method signatures.
- * It will be caught by the GlobalExceptionHandler and converted to appropriate
- * HTTP responses for the client.
- * 
- * Educational Value:
- * - Demonstrates proper custom exception design
- * - Shows how to abstract technical details from business logic
- * - Illustrates exception handling best practices
- * - Teaches separation of concerns in error handling
- * 
- * @author Student Name
- * @version 1.0
- * @see GlobalExceptionHandler
  */
 public class SpeechGenerationException extends RuntimeException {
 
@@ -87,27 +54,5 @@ public class SpeechGenerationException extends RuntimeException {
     public SpeechGenerationException(Throwable cause) {
         super(cause);
     }
-    
-    // TODO for students: Consider adding more specific exception types as your application grows
-    // 
-    // Examples of more specific exceptions you might create:
-    // - ApiKeyInvalidException extends TextGenerationException
-    // - RateLimitExceededException extends TextGenerationException  
-    // - ServiceUnavailableException extends TextGenerationException
-    // - InvalidPromptException extends TextGenerationException
-    // - TokenLimitExceededException extends TextGenerationException
-    // 
-    // Benefits of specific exception types:
-    // 1. More granular error handling in the exception handler
-    // 2. Different HTTP status codes for different error types
-    // 3. Specific retry strategies for different failure modes
-    // 4. Better monitoring and alerting capabilities
-    // 5. More actionable error messages for users
-    // 
-    // Example implementation:
-    // public static class ApiKeyInvalidException extends TextGenerationException {
-    //     public ApiKeyInvalidException(String message) {
-    //         super(message);
-    //     }
-    // }
+
 }

@@ -31,25 +31,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Unit tests for TextGeneratorController.
- * 
+ *
  * This test class demonstrates proper controller testing patterns using Spring Boot Test
  * and MockMvc. It focuses on testing the HTTP layer behavior, request/response handling,
  * and integration with the service layer.
- * 
+ *
  * Testing Strategy:
  * - @WebMvcTest for focused controller testing
  * - MockMvc for HTTP request simulation
  * - Mocked service layer to isolate controller logic
  * - Comprehensive scenario coverage (success, validation errors, service errors)
- * 
- * Educational Value:
- * - Demonstrates modern Spring Boot testing patterns
- * - Shows proper use of mocks for dependency isolation
- * - Illustrates JSON request/response testing
- * - Teaches validation testing techniques
- * - Shows error handling testing
- *
- * We exclude Ollama and ChromaDB autoconfiguration to prevent connection attempts during tests.
  */
 @WebMvcTest(
     value = TextGeneratorController.class,
@@ -441,22 +432,4 @@ class TextGeneratorControllerTest {
                 .build();
     }
     
-    // Testing Best Practices Demonstrated:
-    // 1. @WebMvcTest for focused controller testing
-    // 2. Mocking dependencies for isolation
-    // 3. Testing both success and error scenarios
-    // 4. Validating HTTP status codes and response format
-    // 5. Using meaningful test names and descriptions
-    // 6. Comprehensive scenario coverage
-    // 7. Helper methods for test data creation
-    // 8. Proper assertion patterns
-    
-    // Common Testing Mistakes to Avoid:
-    // 1. Don't test the actual OpenAI API in unit tests (too slow, costs money)
-    // 2. Don't ignore validation testing - it's crucial for API security
-    // 3. Don't test only success scenarios - error cases are equally important
-    // 4. Don't hardcode test data - use helper methods for maintainability
-    // 5. Don't forget to verify that mocked services are called correctly
-    // 6. Don't test implementation details - focus on behavior
-    // 7. Don't write overly complex tests - keep them simple and focused
 }

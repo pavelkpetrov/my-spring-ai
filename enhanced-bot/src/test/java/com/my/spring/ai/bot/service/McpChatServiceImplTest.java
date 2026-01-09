@@ -19,15 +19,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for McpChatServiceImpl.
- *
- * This test class focuses on testing the listAvailableMcpTools method.
- * Other methods (chat and clearUserChatHistory) are already covered in ChatServiceImplTest
- * since they share similar implementation logic.
- *
- * Testing Strategy:
- * - Mock ToolCallbackProvider to isolate the service logic
- * - Test various scenarios: empty list, single tool, multiple tools
- * - Verify proper conversion from array to list
  */
 @ExtendWith(MockitoExtension.class)
 class McpChatServiceImplTest {

@@ -19,31 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Unit tests for TextGeneratorController.
- *
- * This test class demonstrates proper controller testing patterns using Spring Boot Test
- * and MockMvc. It focuses on testing the HTTP layer behavior, request/response handling,
- * and integration with the service layer.
- *
- * Testing Strategy:
- * - @WebMvcTest for focused controller testing
- * - MockMvc for HTTP request simulation
- * - Mocked service layer to isolate controller logic
- * - Comprehensive scenario coverage (success, validation errors, service errors)
- *
- * Educational Value:
- * - Demonstrates modern Spring Boot testing patterns
- * - Shows proper use of mocks for dependency isolation
- * - Illustrates JSON request/response testing
- * - Teaches validation testing techniques
- * - Shows error handling testing
- **
- */
-/**
- * Unit tests for the ChatController.
- * This test class uses @WebMvcTest to focus only on the web layer,
- * mocking the service dependency (ChatServiceImpl) to isolate the controller.
- *
- * We exclude Ollama and ChromaDB autoconfiguration to prevent connection attempts during tests.
  */
 @WebMvcTest(
     value = ChatController.class,
@@ -136,21 +111,6 @@ class ChatControllerTest {
         // Ensure the service method was called exactly once
         verify(chatService, times(1)).clearUserChatHistory(sessionId, true);
     }
-
-    /*
-     * -------------------------------------------------------------------------
-     * NOTE: VALIDATION & ERROR HANDLING TESTS
-     *
-     * The following tests demonstrate how to test for validation and service errors.
-     * Your current controller doesn't have @Valid, but if you add it,
-     * Test 1 (testChat_withInvalidRequest) will work as written.
-     *
-     * To make it work, you would need:
-     * 1. Add validation annotations (like @NotBlank) to your ChatRequest DTO fields.
-     * 2. Add the @Valid annotation in your controller:
-     * public ResponseEntity<ChatResponse> chat(@Valid @RequestBody ChatRequest request) { ... }
-     * -------------------------------------------------------------------------
-     */
 
     @Test
     @DisplayName("POST /api/chat - Bad Request (Validation)")

@@ -25,20 +25,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for DocumentServiceImpl.
- *
- * This test class demonstrates proper service layer testing patterns for document ingestion.
- * It covers successful document ingestion as well as edge cases and error scenarios.
- *
- * Testing Strategy:
- * - @ExtendWith(MockitoExtension.class) for Mockito support
- * - Mocked VectorStore and TextSplitter to isolate service logic
- * - Comprehensive scenario coverage (success, empty content, retry logic)
- *
- * Key Learning Points:
- * - Testing services with multiple dependencies
- * - Mocking Spring AI components (Document, TextSplitter, VectorStore)
- * - Testing retry logic and exception handling
- * - Verifying batch processing behavior
  */
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceImplTest {

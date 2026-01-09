@@ -72,16 +72,6 @@ class ApplicationTests {
         assertNotNull(applicationContext, "ApplicationContext must not be null");
         assertNotNull(applicationContext.getBean(ChatModel.class), "ChatModel should be present");
 
-        // If this test passes, it means:
-        // 1. Spring Boot can start the application
-        // 2. All @Component, @Service, @Controller annotations are working
-        // 3. Configuration properties are valid
-        // 4. All dependencies can be injected successfully
-        // 
-        // This is a foundational test - if this fails, check:
-        // - Package structure and component scanning
-        // - Configuration properties (especially OpenAI API key)
-        // - Dependency injection setup
     }
 
     @Test
@@ -89,10 +79,5 @@ class ApplicationTests {
         assertNotNull(applicationContext.getBean(ChatModel.class), "ChatModel bean should be created");
     }
 
-    // TODO: Add more comprehensive integration tests
-    // Example tests to add:
-    // - Test that TextGeneratorController bean exists
-    // - Test that OpenAI configuration is loaded
-    // - Test basic endpoint functionality (with mocked OpenAI)
 }
 

@@ -22,23 +22,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for QaServiceImpl.
- *
- * This test class demonstrates proper service layer testing patterns for Q&A functionality.
- * It covers successful question answering as well as edge cases and error scenarios.
- *
- * Testing Strategy:
- * - @ExtendWith(MockitoExtension.class) for Mockito support
- * - Mocked ChatClient and VectorStore to isolate service logic
- * - Comprehensive scenario coverage (success, empty question, exception handling)
- *
- * Key Learning Points:
- * - Testing services with fluent API chains (ChatClient)
- * - Mocking Spring AI components (ChatClient, VectorStore)
- * - Testing @PostConstruct initialization
- * - Handling exception scenarios in RAG systems
- *
- * Note: The fluent API of ChatClient requires careful mocking of each method in the chain:
- * chatClient.prompt() -> user(question) -> call() -> content()
  */
 @ExtendWith(MockitoExtension.class)
 class QaServiceImplTest {
