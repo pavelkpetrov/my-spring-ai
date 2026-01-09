@@ -1,24 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Logback Configuration for Week 1 Homework: Basic AI Text Responder
-    
-    This configuration demonstrates proper logging setup for Spring Boot applications
-    with AI integration. It provides educational examples of logging best practices,
-    security considerations, and monitoring patterns.
-    
-    Educational Value:
-    - Shows proper logging configuration structure
-    - Demonstrates different log levels and their usage
-    - Illustrates security-conscious logging (no sensitive data)
-    - Teaches performance-aware logging patterns
-    - Shows how to configure different outputs for different environments
-    
-    Key Principles:
-    - Never log sensitive information (API keys, personal data)
-    - Use appropriate log levels for different types of information
-    - Configure different outputs for development vs production
-    - Include contextual information for debugging
-    - Balance detail with performance impact
+    Logback Configuration for chat-bot
 -->
 <configuration>
     

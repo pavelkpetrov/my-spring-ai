@@ -17,7 +17,7 @@ spring:
     client:
       factory: simple
   application:
-    name: week1-homework-text-responder
+    name: chat-bot
   autoconfigure:
     exclude:
       - org.springframework.ai.autoconfigure.vectorstore.chroma.ChromaVectorStoreAutoConfiguration
