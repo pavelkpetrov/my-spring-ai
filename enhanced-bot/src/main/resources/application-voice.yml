@@ -1,0 +1,76 @@
+server:
+  port: 8080
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+# =============================================================================
+# SPRING AI CONFIGURATION
+# =============================================================================
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  http:
+    client:
+      factory: simple
+  application:
+    name: week1-homework-text-responder
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.vectorstore.chroma.ChromaVectorStoreAutoConfiguration
+      - org.springframework.ai.model.chat.client.autoconfigure.ChatClientAutoConfiguration
+      - org.springframework.ai.autoconfigure.openai.OpenAiAudioSpeechAutoConfiguration
+  ai:
+    # Vector store configuration moved to application-rag.yml
+    # Enable with: --spring.profiles.active=rag
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${OLLAMA_CHAT_MODEL:llama3.2}
+          temperature: ${OLLAMA_CHAT_TEMPERATURE:0.8}
+      init:
+        pull-model-strategy: NEVER
+    openai:
+      api-key: ${OPENAI_API_KEY:dummy-key-for-local-api}
+      audio:
+        transcription:
+          base-url: ${WHISPER_BASE_URL:http://localhost:8000}
+          options:
+            model: Systran/faster-whisper-tiny
+            language: en
+    chat:
+      observations:
+        include-completion: true
+        include-prompt: true
+        include-error-logging: true
+
+# =============================================================================
+# COQUI TEXT-TO-SPEECH CONFIGURATION
+# =============================================================================
+kokoro:
+  tts:
+    base-url: ${KOKORO_TTS_BASE_URL:http://localhost:8880}
+    options:
+      voice: af_bella
+      response_format: mp3
+      download_format: wav
+      speed: 1
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  level:
+    org.springframework.ai.chat.observation: DEBUG
+    org.springframework.ai.client.observation: DEBUG
+    com.my.spring.ai.bot: DEBUG
+    org.springframework.ai: DEBUG
+    org.springframework.web.client: INFO
+    root: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
