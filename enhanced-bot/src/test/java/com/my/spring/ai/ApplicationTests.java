@@ -20,26 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Integration tests for Week1HomeworkApplication
- *
- * These tests verify that the Spring Boot application context loads correctly
- * and all beans are properly configured.
- *
- * We exclude Ollama and ChromaDB autoconfiguration and provide mock implementations
- * to prevent connection attempts during tests.
- * For integration tests that need actual AI functionality, you should start the services via docker-compose first.
- *
- * TODO for students:
- * 1. Add integration tests for your complete application
- * 2. Test that the TextGeneratorController is properly loaded
- * 3. Test that the OpenAI configuration is correct
- * 4. Add tests that verify the application works end-to-end
- *
- * Testing Tips:
- * - Use @SpringBootTest for full application context testing
- * - Use @TestPropertySource to override properties for testing
- * - Consider mocking OpenAI API calls to avoid costs during testing
- * - Test both success and failure scenarios
+ * Integration tests for Application
  */
 @SpringBootTest
 @EnableAutoConfiguration(
