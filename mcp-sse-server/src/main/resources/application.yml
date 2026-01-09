@@ -1,0 +1,57 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: splunk-mcp-sse-server
+  main:
+    banner-mode: off
+  # Spring AI MCP Server Configuration
+  ai:
+    mcp:
+      server:
+        protocol: SSE
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/message
+        enabled: true
+        name: splunk-mcp-server
+        version: 1.0.0
+        resource-change-notification: true # default
+        tool-change-notification: true     # default
+        tool-callback-converter: true
+        prompt-change-notification: true   # default
+        type: ASYNC                         # default
+        capabilities:                      # default
+          completion: false                 # default
+          prompt: false                     # default
+          resource: false                   # default
+          tool: true
+  auth:
+    # Enable/disable API key authentication for MCP endpoints
+    enabled: ${MCP_AUTH_ENABLED:true}
+    # List of valid API keys (provide via environment variable or hardcode for development)
+    api-keys:
+      - ${MCP_API_KEY_1:dev-key-1234567890abcdef}
+      - ${MCP_API_KEY_2:dev-key-abcdef1234567890}
+      - ${MCP_API_KEY_3:dev-key-fedcba0987654321}
+    # Note: For production, use strong randomly generated keys and enable authentication
+
+# Splunk Configuration
+splunk:
+  host: ${SPLUNK_HOST:localhost}
+  port: ${SPLUNK_PORT:8089}
+  username: ${SPLUNK_USERNAME:admin}
+  password: ${SPLUNK_PASSWORD:Admin123!}
+  scheme: ${SPLUNK_SCHEME:https}
+  ssl-verify: ${SPLUNK_SSL_VERIFY:false}
+  default-index: ${SPLUNK_DEFAULT_INDEX:main}
+  search-timeout: ${SPLUNK_SEARCH_TIMEOUT:300}
+
+# Logging Configuration
+logging:
+  level:
+    com.mcpserver: DEBUG
+    org.springframework: INFO
+    com.splunk: WARN
+    io: INFO
+    reactor: INFO

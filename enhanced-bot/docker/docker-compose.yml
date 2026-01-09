@@ -1,0 +1,47 @@
+# -----------------------------------------------------------------
+# Main Docker Compose Configuration
+# -----------------------------------------------------------------
+services:
+  # -------------------------
+  # Service 2: Ollama
+  # -------------------------
+  ollama:
+    image: ollama/ollama:0.12.10
+    container_name: ollama
+    pull_policy: missing
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      # Ollama's persistent storage for models
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - my-shared-network
+    # Pull models on startup
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        sleep 5
+        ollama pull llama3.2
+        wait
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+# -----------------------------------------------------------------
+# Volumes & Networks
+# -----------------------------------------------------------------
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  my-shared-network:
+    driver: bridge

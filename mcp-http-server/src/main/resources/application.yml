@@ -1,0 +1,54 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: email-mcp-http-server
+  main:
+    banner-mode: off
+
+  # Spring AI MCP Server Configuration for HTTP (Stateless Transport)
+  ai:
+    mcp:
+      server:
+        stateless:
+          mcp-endpoint: /mcp
+        protocol: STATELESS
+        enabled: true
+        name: email-greeting-server
+        version: 1.0.0
+        type: SYNC  # Synchronous tool execution
+        capabilities:
+          completion: false
+          prompt: false
+          resource: false
+          tool: true  # Only tool support enabled
+
+  # Email Configuration
+  mail:
+    host: ${MAIL_HOST:smtp.mailgun.org}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    default-encoding: UTF-8
+
+# Email Service Configuration
+email:
+  from:
+    address: ${EMAIL_FROM_ADDRESS}
+    name: ${EMAIL_FROM_NAME:Greeting Service}
+
+# Logging Configuration
+logging:
+  level:
+    root: OFF

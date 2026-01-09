@@ -1,0 +1,18 @@
+spring:
+  main:
+    banner-mode: off
+    web-application-type: none
+  application:
+    name: splunk-mcp-stdio-server
+  ai:
+    mcp:
+      server:
+        stdio: true
+        name: mcp-stdio-server
+        version: 0.0.1
+        type: SYNC
+
+# Logging Configuration
+logging:
+  level:
+    root: OFF

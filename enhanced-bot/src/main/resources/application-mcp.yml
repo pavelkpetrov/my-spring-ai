@@ -1,0 +1,76 @@
+server:
+  port: 8080
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+
+# =============================================================================
+# SPRING AI CONFIGURATION
+# =============================================================================
+
+spring:
+  http:
+    client:
+      factory: simple
+  application:
+    name: week1-homework-text-responder
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.vectorstore.chroma.ChromaVectorStoreAutoConfiguration
+      - org.springframework.ai.model.chat.client.autoconfigure.ChatClientAutoConfiguration
+      - org.springframework.ai.autoconfigure.openai.OpenAiAudioSpeechAutoConfiguration
+      - org.springframework.ai.model.bedrock.titan.autoconfigure.BedrockTitanEmbeddingAutoConfiguration
+  ai:
+    bedrock:
+      aws:
+        region: ${AWS_DEFAULT_REGION:us-east-1}
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+        session-token: ${AWS_SESSION_TOKEN}
+      converse:
+        chat:
+          options:
+            model: ${BEDROCK_CHAT_MODEL:amazon.nova-micro-v1:0}
+            temperature: ${BEDROCK_CHAT_TEMPERATURE:0.8}
+    openai:
+      api-key: ${OPENAI_API_KEY:dummy-key-for-local-api}
+    chat:
+      observations:
+        include-completion: true
+        include-prompt: true
+        include-error-logging: true
+    model:
+      chat: bedrock-converse
+    mcp:
+      client:
+        sse:
+          connections:
+            # Simple configuration using default /sse endpoint
+            splunk-mcp-server:
+              url: ${MPC_SPLUNK_SSE_SERVER_URL:http://localhost:8081}
+              api-key: ${MCP_SERVER_API_KEY:dev-key-1234567890abcdef}
+            email-mcp-server:
+              url: ${MPC_EMAIL_SSE_SERVER_URL:http://localhost:8082}
+        stdio:
+          root-change-notification: true
+          connections:
+            weather-mcp-server:
+              command: java
+              args:
+                - -jar
+                - ${MPC_STDIO_SERVER_PATH}
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  level:
+    org.springframework.ai.chat.observation: DEBUG
+    org.springframework.ai.client.observation: DEBUG
+    com.coherentsolutions.homework.week1: DEBUG
+    org.springframework.ai: DEBUG
+    org.springframework.web.client: INFO
+    root: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

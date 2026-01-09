@@ -1,0 +1,123 @@
+# -----------------------------------------------------------------
+# Main Docker Compose Configuration
+# docker-compose-speech.yml
+# Brings up LLM (ollama), Speech-to-Text (faster-whisper), and Text-to-Speech (kokoro-tts) services
+# for an end-to-end voice-enabled chatbot pipeline.
+# -----------------------------------------------------------------
+services:
+  # -------------------------
+  # Service 1: Ollama
+  # -------------------------
+  ollama:
+    image: ollama/ollama:0.12.10
+    container_name: ollama
+    pull_policy: missing
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      # Ollama's persistent storage for models
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - my-shared-network
+    # Pull models on startup
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        sleep 5
+        ollama pull llama3.2
+        wait
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+  # -------------------------
+  # Service 2: kokoro-tts test to speech synthesis (CPU only)
+  # -------------------------
+  kokoro-tts:
+    build:
+      context: ./kokoro
+      dockerfile: ./Dockerfile
+    volumes:
+      - kokoro_data:/app/api
+    ports:
+      - "8880:8880" # Host:Container (host port 8880 forwards to container port 8880)
+    environment:
+      - PYTHONPATH=/app:/app/api
+      # ONNX Optimization Settings for vectorized operations
+      - ONNX_NUM_THREADS=8  # Parallelize vectorized operations for performance
+      - ONNX_INTER_OP_THREADS=4  # Optimize parallel execution across model graph
+      - ONNX_EXECUTION_MODE=parallel
+      - ONNX_OPTIMIZATION_LEVEL=all
+      - ONNX_MEMORY_PATTERN=true
+      - ONNX_ARENA_EXTEND_STRATEGY=kNextPowerOfTwo
+      - API_LOG_LEVEL=DEBUG # Enable verbose API output for debugging
+    networks:
+      - my-shared-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+
+  # -------------------------
+  # Faster Whisper Server - Speech to text recognition (CPU only)
+  # -------------------------
+  # -------------------------
+  # Service 3: faster-whisper
+  # -------------------------
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    container_name: faster-whisper
+    pull_policy: missing
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-tiny
+      - WHISPER__INFERENCE_DEVICE=cpu
+      # Increase timeouts for CPU processing
+      - WHISPER__TIMEOUT=300
+      # Optimize for CPU
+      - WHISPER__COMPUTE_TYPE=int8
+      - WHISPER__NUM_WORKERS=1
+      - WHISPER__CPU_THREADS=4
+    networks:
+      - my-shared-network
+    # Resource limits for CPU-only usage
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+
+# -----------------------------------------------------------------
+# Volumes & Networks
+# -----------------------------------------------------------------
+volumes:
+  ollama_data:
+    driver: local
+  kokoro_data:
+    driver: local
+
+networks:
+  my-shared-network:
+    driver: bridge

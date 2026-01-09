@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring AI Chatbot</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Simple scrollbar for chat window */
+        #chat-window::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-window::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1; /* cool-gray-300 */
+            border-radius: 3px;
+        }
+        #chat-window::-webkit-scrollbar-track {
+            background-color: #f1f5f9; /* cool-gray-100 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans flex items-center justify-center min-h-screen">
+
+<div class="bg-white rounded-lg shadow-xl w-full max-w-2xl h-[80vh] flex flex-col">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-4 border-b">
+        <h1 class="text-xl font-bold text-gray-800">Spring AI Chatbot</h1>
+        <!-- UPDATED: Added a flex container for both buttons -->
+        <div class="flex space-x-2">
+            <button id="new-chat-button" class="text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors">
+                New Chat
+            </button>
+            <button id="clear-history-button" class="text-sm bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors">
+                Clear History
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Window -->
+    <div id="chat-window" class="flex-1 p-4 overflow-y-auto space-y-4">
+        <!-- Messages will be injected here by JavaScript -->
+    </div>
+
+    <!-- "Thinking" Indicator -->
+    <div id="thinking-indicator" class="p-4 text-gray-500 italic hidden">
+        Bot is thinking...
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-4 border-t flex">
+        <input
+                type="text"
+                id="message-input"
+                placeholder="Type your message..."
+                class="flex-1 border rounded-l-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button id="send-button" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-r-lg transition-colors">
+            Send
+        </button>
+    </div>
+</div>
+
+<script>
+    // DOM Elements
+    const chatWindow = document.getElementById('chat-window');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    // Get both buttons
+    const newChatButton = document.getElementById('new-chat-button');
+    const clearHistoryButton = document.getElementById('clear-history-button');
+    const thinkingIndicator = document.getElementById('thinking-indicator');
+
+    // API Endpoint
+    const CHAT_API_URL = 'http://localhost:8080/api/chat';
+
+    // State
+    let sessionId = crypto.randomUUID();
+
+    // --- Event Listeners ---
+    sendButton.addEventListener('click', sendMessage);
+    // Wire up both buttons
+    newChatButton.addEventListener('click', startNewChat);
+    clearHistoryButton.addEventListener('click', clearCurrentSessionHistory);
+
+    messageInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // --- Core Functions ---
+
+    /**
+     * Handles sending the user's message to the backend.
+     */
+    async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (message === '') return;
+
+        addMessageToWindow(message, 'user');
+        messageInput.value = '';
+        showThinkingIndicator();
+
+        try {
+            const response = await fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    message: message,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            addMessageToWindow(data.response, 'bot');
+
+        } catch (error) {
+            console.error('Error fetching chat response:', error);
+            addMessageToWindow('Sorry, I ran into an error. Please try again.', 'bot', true);
+        } finally {
+            hideThinkingIndicator();
+        }
+    }
+
+    /**
+     * Clears the server history, clears the UI, and starts a NEW session with a NEW sessionId.
+     */
+    async function startNewChat() {
+        try {
+            // Tell the server to clear the old session history
+            await fetch(`${CHAT_API_URL}/${sessionId}?isNew=true`, {
+                method: 'DELETE',
+            });
+            console.log(`Cleared history for old session: ${sessionId}`);
+        } catch (error) {
+            console.error('Error clearing session on server:', error);
+            // Non-critical, we can still reset the UI
+        }
+
+        // Clear the UI
+        chatWindow.innerHTML = '';
+        // Generate a new session ID for the new chat
+        sessionId = crypto.randomUUID();
+        addWelcomeMessage();
+        console.log(`New chat session started with ID: ${sessionId}`);
+    }
+
+    /**
+     * NEW FUNCTION: Clears the server history and UI but KEEPS the same sessionId.
+     */
+    async function clearCurrentSessionHistory() {
+         try {
+            // Tell the server to clear the session history
+            await fetch(`${CHAT_API_URL}/${sessionId}`, {
+                method: 'DELETE',
+            });
+            console.log(`Cleared history for current session: ${sessionId}`);
+        } catch (error) {
+            console.error('Error clearing session on server:', error);
+        }
+
+        // Clear the UI
+        chatWindow.innerHTML = '';
+        // Add welcome message back
+        addWelcomeMessage();
+        console.log(`UI cleared for session: ${sessionId}. Session ID is unchanged.`);
+    }
+
+    // --- UI Helper Functions ---
+
+    /**
+     * Adds a chat bubble to the chat window.
+     * @param {string} message - The text content of the message.
+     * @param {'user' | 'bot'} sender - The sender of the message.
+     * @param {boolean} [isError=false] - Whether this is an error message.
+     */
+    function addMessageToWindow(message, sender, isError = false) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('flex', 'flex-col', 'max-w-xs', 'md:max-w-md', 'lg:max-w-lg');
+
+        const bubble = document.createElement('div');
+        bubble.classList.add('p-3', 'rounded-lg', 'shadow-md');
+
+        // Format the message content (basic markdown for newlines)
+        bubble.innerHTML = message.replace(/\n/g, '<br>');
+
+        if (sender === 'user') {
+            messageElement.classList.add('self-end', 'items-end');
+            bubble.classList.add('bg-blue-500', 'text-white');
+        } else {
+            messageElement.classList.add('self-start', 'items-start');
+            bubble.classList.add(isError ? 'bg-red-500' : 'bg-gray-200', isError ? 'text-white' : 'text-gray-800');
+        }
+
+        messageElement.appendChild(bubble);
+        chatWindow.appendChild(messageElement);
+
+        // Scroll to the bottom
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function showThinkingIndicator() {
+        thinkingIndicator.classList.remove('hidden');
+    }
+
+    function hideThinkingIndicator() {
+        thinkingIndicator.classList.add('hidden');
+    }
+
+    function addWelcomeMessage() {
+        addMessageToWindow('Hello! I am your Spring AI assistant. How can I help you today?', 'bot');
+    }
+
+    // --- Initial Load ---
+    addWelcomeMessage();
+    console.log(`New chat session started with ID: ${sessionId}`);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+curl --location 'http://localhost:8080/qa?question=Who%20found%20Microsoft'

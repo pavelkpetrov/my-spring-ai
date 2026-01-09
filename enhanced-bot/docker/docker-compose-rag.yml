@@ -1,0 +1,82 @@
+# -----------------------------------------------------------------
+# Main Docker Compose Configuration
+# -----------------------------------------------------------------
+services:
+  # -------------------------
+  # Service 1: Ollama
+  # -------------------------
+  ollama:
+    image: ollama/ollama:0.12.10
+    container_name: ollama
+    pull_policy: missing
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      # Ollama's persistent storage for models
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - my-shared-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    # Pull models on startup
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        sleep 5
+        ollama pull nomic-embed-text
+        ollama pull llama3.2
+        wait
+
+  # -------------------------
+  # Service 1: ChromaDB - Vector Store api v1 supports
+  # -------------------------
+  chromadb:
+    image: chromadb/chroma:0.4.24
+    pull_policy: missing
+    container_name: chromadb
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+      - ALLOW_RESET=true
+      - IS_PERSISTENT=true
+      - ANONYMIZED_TELEMETRY=false
+      # Increase timeout settings to prevent "No response returned" errors
+      - CHROMA_SERVER_GRPC_PORT=50051
+      - CHROMA_TIMEOUT=120
+    volumes:
+      - chromadb_data:/chroma/chroma
+    networks:
+      - my-shared-network
+    # Add resource limits to prevent OOM issues
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+# -----------------------------------------------------------------
+# Volumes & Networks
+# -----------------------------------------------------------------
+volumes:
+  ollama_data:
+    driver: local
+  chromadb_data:
+    driver: local
+
+networks:
+  my-shared-network:
+    driver: bridge

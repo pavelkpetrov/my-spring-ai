@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Voice Chat (Updated API)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        #chat-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        #recordButton {
+            background-color: #007bff;
+            color: white;
+        }
+        #recordButton:hover {
+            background-color: #0056b3;
+        }
+        #stopButton {
+            background-color: #dc3545;
+            color: white;
+            display: none;
+        }
+        #stopButton:hover {
+            background-color: #c82333;
+        }
+        #clearButton {
+            background-color: #6c757d;
+            color: white;
+        }
+        #clearButton:hover {
+            background-color: #5a6268;
+        }
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+        #chat-history {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+        .user-request {
+            background-color: #e9ecef;
+            text-align: right;
+            margin-left: 20%;
+        }
+        .ai-response {
+            background-color: #d4edda;
+            margin-right: 20%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <h2>🎤 Voice Chat (API Update)</h2>
+        <p>Session ID: <span id="sessionIdDisplay"></span></p>
+
+        <div class="controls">
+            <button id="recordButton" disabled>Start Recording</button>
+            <button id="stopButton" disabled>Stop Recording</button>
+        </div>
+
+        <button id="clearButton">🗑️ Clear History</button>
+
+        <div id="status">Initializing...</div>
+
+        <div id="chat-history">
+            </div>
+    </div>
+
+    <script>
+        const API_ENDPOINT = '/api/voice/chat'; // <-- Updated API Endpoint
+        const recordButton = document.getElementById('recordButton');
+        const stopButton = document.getElementById('stopButton');
+        const clearButton = document.getElementById('clearButton');
+        const statusDiv = document.getElementById('status');
+        const chatHistory = document.getElementById('chat-history');
+        const sessionIdDisplay = document.getElementById('sessionIdDisplay');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioStream;
+        let sessionId;
+
+        // --- Utility Functions for Binary/Base64 Conversion (UNCHANGED) ---
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64String = reader.result.split(',')[1];
+                    resolve(base64String);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function base64ToBlob(base64String, mimeType = 'audio/webm') {
+            const byteCharacters = atob(base64String);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+            return new Blob(byteArrays, { type: mimeType });
+        }
+
+
+        // --- 1. Functions for Chat History Display (MODIFIED) ---
+        // Added requestText parameter to display the transcribed user request.
+        function displayMessage(isUser, audioBlob, textResponse = null, requestText = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audioEl = document.createElement('audio');
+            audioEl.controls = true;
+            audioEl.src = audioUrl;
+
+            if (isUser) {
+                messageDiv.classList.add('user-request');
+                const label = document.createElement('p');
+                // USE THE PROVIDED requestText (transcription) for the user's message
+                label.innerHTML = `<strong>Your Request (Transcribed):</strong> ${requestText || ' (Audio Only)'}`;
+                messageDiv.appendChild(label);
+            } else {
+                messageDiv.classList.add('ai-response');
+                const label = document.createElement('p');
+                label.innerHTML = `<strong>AI Response:</strong> ${textResponse || ' (No Text Provided)'}`;
+                messageDiv.appendChild(label);
+            }
+
+            messageDiv.appendChild(audioEl);
+            chatHistory.prepend(messageDiv);
+        }
+
+        // --- 2. Initialize and Session ID (UNCHANGED) ---
+
+        function initializeSession() {
+            // Simple session ID generation (e.g., a timestamp + random number)
+            sessionId = 'sess_' + Date.now() + Math.floor(Math.random() * 1000);
+            sessionIdDisplay.textContent = sessionId;
+            recordButton.disabled = false;
+            statusDiv.textContent = 'Ready to record.';
+        }
+
+        // --- 3. Recording Functions (MODIFIED: call to displayMessage) ---
+
+        recordButton.onclick = async () => {
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                mediaRecorder = new MediaRecorder(audioStream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+                    audioStream.getTracks().forEach(track => track.stop());
+
+                    // IMPORTANT: The initial user message is displayed with the audio,
+                    // but the transcribed *text* will be added later in sendChatRequest.
+                    // We'll update this to only call sendChatRequest here, and handle
+                    // all display updates *after* the server response.
+
+                    sendChatRequest(audioBlob);
+
+                    recordButton.style.display = 'block';
+                    stopButton.style.display = 'none';
+                    stopButton.disabled = true;
+                };
+
+                mediaRecorder.start();
+
+                recordButton.style.display = 'none';
+                stopButton.style.display = 'block';
+                stopButton.disabled = false;
+                statusDiv.textContent = 'Recording in progress... Click Stop to finish.';
+
+            } catch (err) {
+                statusDiv.textContent = 'Error: Could not access microphone. Check permissions.';
+                console.error('Error accessing microphone:', err);
+            }
+        };
+
+        stopButton.onclick = () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        };
+
+        // --- 4. Clear History Function (DELETE Request - UNCHANGED) ---
+
+        clearButton.onclick = clearHistory;
+
+        async function clearHistory() {
+            if (!confirm("Are you sure you want to clear the chat history? This will reset the session on the server.")) {
+                return;
+            }
+
+            statusDiv.textContent = 'Sending DELETE request to clear session...';
+
+            try {
+                // Send the session ID in the request URL or body, but for a DELETE,
+                // sending it as a query parameter or path variable is common.
+                // We'll send it as a query parameter here:
+                const deleteEndpoint = `${API_ENDPOINT}/${sessionId}?isNew=false`;
+
+                const response = await fetch(deleteEndpoint, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                    // Optionally, you could send the sessionId in the body if your server prefers it:
+                    // body: JSON.stringify({ sessionId: sessionId })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // --- Success Handling ---
+                chatHistory.innerHTML = ''; // Clear the UI history
+                initializeSession(); // Generate a new session ID
+                statusDiv.textContent = 'Chat history cleared and new session started.';
+                alert('History cleared successfully!');
+
+            } catch (error) {
+                statusDiv.textContent = `Error clearing history: ${error.message}`;
+                console.error('Clear History Error:', error);
+            }
+        }
+
+
+        // --- 5. Send Request and Process Response (POST - MODIFIED) ---
+
+        async function sendChatRequest(audioBlob) {
+            statusDiv.textContent = 'Sending request to server...';
+
+            // Temporarily store the user's recorded audioBlob to display it later
+            // along with the transcription (chatResponse.request)
+            const userAudioBlob = audioBlob;
+
+            try {
+                const voiceBase64 = await blobToBase64(userAudioBlob);
+
+                const chatRequest = {
+                    sessionId: sessionId,
+                    voice: voiceBase64 // This is the user's voice
+                };
+
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(chatRequest)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const chatResponse = await response.json();
+
+                // Check for expected fields in the response
+                if (!chatResponse.voice || !chatResponse.request) {
+                    statusDiv.textContent = 'Error: Server response missing required voice or request data.';
+                    console.error('Missing voice/request field in ChatResponse:', chatResponse);
+                    return;
+                }
+
+                // 1. Display the User's Request (Audio + Server Transcription)
+                // We use the original userAudioBlob and the newly received chatResponse.request
+                displayMessage(true, userAudioBlob, null, chatResponse.request);
+
+
+                // 2. Process and Display the AI's Response (Audio + Text)
+                const responseAudioBlob = base64ToBlob(chatResponse.voice, 'audio/webm');
+
+                // We use the AI's audio and the AI's response text (chatResponse.response)
+                displayMessage(false, responseAudioBlob, chatResponse.response);
+
+                // Update session ID if returned (in case server re-initializes it)
+                sessionId = chatResponse.sessionId || sessionId;
+                sessionIdDisplay.textContent = sessionId;
+                statusDiv.textContent = 'Response received. Ready for next request.';
+
+            } catch (error) {
+                statusDiv.textContent = `Error sending request: ${error.message}`;
+                console.error('Chat Request Error:', error);
+            }
+        }
+
+        // Start the process
+        initializeSession();
+
+    </script>
+</body>
+</html>

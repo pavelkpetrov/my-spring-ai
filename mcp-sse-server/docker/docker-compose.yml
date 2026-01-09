@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  splunk:
+    image: splunk/splunk:9.4
+    container_name: splunk-sandbox
+    hostname: splunk
+    environment:
+      # Accept Splunk license and general terms (required for 10.x+)
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
+
+      # Set admin password (change this to your preferred password)
+      - SPLUNK_PASSWORD=Admin123!
+
+      # Enable HEC (HTTP Event Collector) for data ingestion
+      - SPLUNK_HEC_TOKEN=12345678-1234-1234-1234-123456789012
+
+      # Note: TCP receiving port (9997) disabled - not needed for local development
+      # Uncomment below if you need to receive data from Splunk forwarders:
+      # - SPLUNK_ADD=tcp 9997
+      # - SPLUNK_ENABLE_LISTEN=9997
+
+    ports:
+      # Splunk Web UI
+      - "8000:8000"
+
+      # Management/API port
+      - "8089:8089"
+
+      # HTTP Event Collector (HEC) port
+      - "8088:8088"
+
+      # Splunk forwarder receiver port
+      - "9997:9997"
+
+      # Syslog port (optional)
+      - "514:514/udp"
+
+    volumes:
+      # Persist Splunk data
+      - splunk-data:/opt/splunk/var
+
+      # Persist Splunk apps
+      - splunk-apps:/opt/splunk/etc/apps
+
+      # Mount local apps directory for custom apps and tutorial data
+      - ./splunk-apps:/opt/splunk/etc/deployment-apps
+
+      # Mount tutorial data directory
+      - ./tutorial-data:/tutorial-data
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+    labels:
+      - "com.splunk.environment=sandbox"
+      - "com.splunk.purpose=tutorial"
+
+volumes:
+  splunk-data:
+    driver: local
+  splunk-apps:
+    driver: local
+
+networks:
+  default:
+    name: splunk-sandbox-network

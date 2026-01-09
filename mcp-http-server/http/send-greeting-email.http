@@ -1,0 +1,81 @@
+### Test MCP HTTP Server - Send Greeting Email
+
+### 1. Send a greeting email (successful case)
+POST http://localhost:8082/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "send_greeting_email",
+    "arguments": {
+      "toEmail": "test@example.com",
+      "greetingText": "Hello! This is a test greeting from the MCP HTTP server. Have a wonderful day!"
+    }
+  }
+}
+
+### 2. Send a simple greeting
+POST http://localhost:8082/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "send_greeting_email",
+    "arguments": {
+      "toEmail": "recipient@example.com",
+      "greetingText": "Happy New Year! 🎉"
+    }
+  }
+}
+
+### 3. Test with invalid email (should fail validation)
+POST http://localhost:8082/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "send_greeting_email",
+    "arguments": {
+      "toEmail": "invalid-email",
+      "greetingText": "This should fail"
+    }
+  }
+}
+
+### 4. Test with missing parameter (should fail)
+POST http://localhost:8082/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "send_greeting_email",
+    "arguments": {
+      "toEmail": "test@example.com"
+    }
+  }
+}
+
+### 5. List available tools
+POST http://localhost:8082/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/list"
+}
+
+### 6. Health check (if actuator is enabled)
+GET http://localhost:8082/actuator/health

@@ -1,0 +1,15 @@
+# Ignore Splunk apps (may contain licenses or proprietary content)
+splunk-apps/*
+!splunk-apps/.gitkeep
+
+# Ignore tutorial data files (may contain sensitive test data)
+tutorial-data/*
+!tutorial-data/.gitkeep
+
+# Ignore any downloaded archives
+*.tar.gz
+*.zip
+*.tgz
+
+# Ignore any log files generated locally
+*.log
